@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(grep -v \"^.*//.*$\")",
+      "Bash(curl *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(php *)",
+      "Bash(npx vite *)",
+      "Bash(lsof -i :8000 -sTCP:LISTEN)",
+      "Bash(echo \"Server PID: $!\")"
+    ]
+  }
+}

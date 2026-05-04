@@ -42,6 +42,10 @@ const nsOrderInvoice                =   defineAsyncComponent( () => import( './p
 const nsPrintLabel                  =   defineAsyncComponent( () => import( './pages/dashboard/products/ns-print-label.vue' ) );
 const nsTransactionsRules           =   defineAsyncComponent( () => import( './pages/dashboard/transactions/ns-transactions-rules.vue' ) );
 const nsScaleSettingsPreview        =   defineAsyncComponent( () => import( './components/ns-scale-settings-preview.vue' ) );
+const nsRawMaterialList             =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-list.vue' ) );
+const nsRecipeList                  =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-recipe-list.vue' ) );
+const nsRawMaterialStockReport      =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-stock-report.vue' ) );
+const nsRawMaterialLowStock         =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-low-stock.vue' ) );
 
 declare const window;
 declare let nsExtraComponents;   
@@ -86,6 +90,10 @@ const allComponents    =   Object.assign({
     nsStockAdjustment,
     nsOrderInvoice,
     nsScaleSettingsPreview,
+    nsRawMaterialList,
+    nsRecipeList,
+    nsRawMaterialStockReport,
+    nsRawMaterialLowStock,
     ...baseComponents
 }, nsExtraComponents );
 
