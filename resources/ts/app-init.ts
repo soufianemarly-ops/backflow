@@ -48,6 +48,8 @@ const nsRawMaterialStockReport      =   defineAsyncComponent( () => import( './p
 const nsRawMaterialLowStock         =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-low-stock.vue' ) );
 const nsProductStockReport          =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-product-stock-report.vue' ) );
 const nsRawMaterialSupplyHistory    =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-supply-history.vue' ) );
+const nsRawMaterialConsumptionLogs  =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-consumption-logs.vue' ) );
+const nsEstablishmentSwitcher       =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-establishment-switcher.vue' ) );
 
 declare const window;
 declare let nsExtraComponents;   
@@ -98,6 +100,8 @@ const allComponents    =   Object.assign({
     nsRawMaterialLowStock,
     nsProductStockReport,
     nsRawMaterialSupplyHistory,
+    nsRawMaterialConsumptionLogs,
+    nsEstablishmentSwitcher,
     ...baseComponents
 }, nsExtraComponents );
 

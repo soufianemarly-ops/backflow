@@ -8,6 +8,7 @@
         </div>
     </div>
     <div class="top-tools-side flex items-center -mx-2">
+        <ns-establishment-switcher></ns-establishment-switcher>
         <div clss="px-2">
             <ns-notifications></ns-notifications>
         </div>
