@@ -138,28 +138,33 @@
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <label class="block text-sm font-medium">{{ __( 'Ingrédients' ) }}</label>
-                            <button @click="addIngredient()" class="ns-button rounded px-2 py-1 text-xs">
+                            <button @click="addIngredient()" :disabled="isLoadingIngredients" class="ns-button rounded px-2 py-1 text-xs">
                                 <i class="las la-plus"></i> {{ __( 'Ajouter' ) }}
                             </button>
                         </div>
-                        <div v-for="(ing, idx) in form.ingredients" :key="idx" class="flex gap-2 mb-2 items-center">
-                            <select v-model="ing.raw_material_id" class="ns-select flex-1 rounded border px-2 py-1 text-sm">
-                                <option value="">{{ __( '-- Matière --' ) }}</option>
-                                <option v-for="m in rawMaterials" :key="m.id" :value="m.id">{{ m.name }}</option>
-                            </select>
-                            <input v-model.number="ing.quantity" type="number" min="0" step="0.01" class="ns-input w-24 rounded border px-2 py-1 text-sm" :placeholder="__( 'Qté' )">
-                            <select v-model="ing.unit" class="ns-select w-20 rounded border px-2 py-1 text-sm">
-                                <option value="g">g</option>
-                                <option value="kg">kg</option>
-                                <option value="L">L</option>
-                                <option value="ml">ml</option>
-                                <option value="pcs">pcs</option>
-                            </select>
-                            <button @click="removeIngredient( idx )" class="ns-button error rounded px-2 py-1 text-xs">
-                                <i class="las la-trash"></i>
-                            </button>
+                        <div v-if="isLoadingIngredients" class="flex justify-center py-3">
+                            <ns-spinner size="6"></ns-spinner>
                         </div>
-                        <p v-if="form.ingredients.length === 0" class="text-sm text-gray-400">{{ __( 'Aucun ingrédient ajouté.' ) }}</p>
+                        <template v-else>
+                            <div v-for="(ing, idx) in form.ingredients" :key="idx" class="flex gap-2 mb-2 items-center">
+                                <select v-model="ing.raw_material_id" class="ns-select flex-1 rounded border px-2 py-1 text-sm">
+                                    <option value="">{{ __( '-- Matière --' ) }}</option>
+                                    <option v-for="m in rawMaterials" :key="m.id" :value="m.id">{{ m.name }}</option>
+                                </select>
+                                <input v-model.number="ing.quantity" type="number" min="0" step="0.01" class="ns-input w-24 rounded border px-2 py-1 text-sm" :placeholder="__( 'Qté' )">
+                                <select v-model="ing.unit" class="ns-select w-20 rounded border px-2 py-1 text-sm">
+                                    <option value="g">g</option>
+                                    <option value="kg">kg</option>
+                                    <option value="L">L</option>
+                                    <option value="ml">ml</option>
+                                    <option value="pcs">pcs</option>
+                                </select>
+                                <button @click="removeIngredient( idx )" class="ns-button error rounded px-2 py-1 text-xs">
+                                    <i class="las la-trash"></i>
+                                </button>
+                            </div>
+                            <p v-if="form.ingredients.length === 0" class="text-sm text-gray-400">{{ __( 'Aucun ingrédient ajouté.' ) }}</p>
+                        </template>
                     </div>
                 </div>
                 <div class="ns-box-footer flex justify-end gap-2 p-4 border-t">
@@ -187,6 +192,7 @@ export default {
             rawMaterials: [],
             isLoading: false,
             isSaving: false,
+            isLoadingIngredients: false,
             showForm: false,
             editingRecipe: null,
             form: this.emptyForm(),
@@ -243,13 +249,35 @@ export default {
         openEditForm( recipe ) {
             this.editingRecipe = recipe;
             this.form = {
-                ...recipe,
-                product_id:   recipe.product_id || null,
-                product_name: recipe.product ? recipe.product.name : '',
-                ingredients:  ( recipe.ingredients || [] ).map( i => ({ ...i }) ),
+                name:           recipe.name,
+                product_id:     recipe.product_id || null,
+                product_name:   recipe.product ? recipe.product.name : '',
+                yield_quantity: recipe.yield_quantity || 1,
+                yield_unit:     recipe.yield_unit || 'pcs',
+                ingredients:    [],
             };
             this.resetProductSearch();
+            this.isLoadingIngredients = true;
             this.showForm = true;
+
+            console.log( '[openEditForm] fetching recipe id:', recipe.id, 'url:', `/api/ns-raw-material/recipes/${recipe.id}` );
+            nsHttpClient.get( `/api/ns-raw-material/recipes/${recipe.id}` ).subscribe({
+                next: ( data ) => {
+                    console.log( '[openEditForm] API response (typeof):', typeof data, data );
+                    console.log( '[openEditForm] data.ingredients:', data?.ingredients );
+                    console.log( '[openEditForm] data.id:', data?.id );
+                    this.form.ingredients = ( data.ingredients || [] ).map( i => ({
+                        raw_material_id: i.raw_material_id,
+                        quantity:        i.quantity,
+                        unit:            i.raw_material?.unit || 'kg',
+                    }) );
+                    this.isLoadingIngredients = false;
+                },
+                error: () => {
+                    nsSnackBar.error( __( 'Impossible de charger les ingrédients.' ) );
+                    this.isLoadingIngredients = false;
+                },
+            });
         },
         closeForm() { this.showForm = false; },
         addIngredient() {

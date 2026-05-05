@@ -9,7 +9,9 @@
       "Bash(php *)",
       "Bash(npx vite *)",
       "Bash(lsof -i :8000 -sTCP:LISTEN)",
-      "Bash(echo \"Server PID: $!\")"
+      "Bash(echo \"Server PID: $!\")",
+      "Bash(npm run *)",
+      "Bash(grep *)"
     ]
   }
 }
