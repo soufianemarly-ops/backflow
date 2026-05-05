@@ -47,6 +47,7 @@ const nsRecipeList                  =   defineAsyncComponent( () => import( './p
 const nsRawMaterialStockReport      =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-stock-report.vue' ) );
 const nsRawMaterialLowStock         =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-low-stock.vue' ) );
 const nsProductStockReport          =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-product-stock-report.vue' ) );
+const nsRawMaterialSupplyHistory    =   defineAsyncComponent( () => import( './pages/dashboard/raw-material/ns-raw-material-supply-history.vue' ) );
 
 declare const window;
 declare let nsExtraComponents;   
@@ -96,6 +97,7 @@ const allComponents    =   Object.assign({
     nsRawMaterialStockReport,
     nsRawMaterialLowStock,
     nsProductStockReport,
+    nsRawMaterialSupplyHistory,
     ...baseComponents
 }, nsExtraComponents );
 

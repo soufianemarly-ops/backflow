@@ -27,7 +27,7 @@
                             <th width="130" class="border p-2 text-right">{{ __( 'Stock' ) }}</th>
                             <th width="130" class="border p-2 text-right">{{ __( 'Seuil alerte' ) }}</th>
                             <th width="130" class="border p-2 text-right">{{ __( 'Coût/unité' ) }}</th>
-                            <th width="120" class="border p-2 text-center">{{ __( 'Actions' ) }}</th>
+                            <th width="160" class="border p-2 text-center">{{ __( 'Actions' ) }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,10 +54,13 @@
                             <td class="p-2 border text-right">{{ nsCurrency( material.cost_per_unit ) }}</td>
                             <td class="p-2 border text-center">
                                 <div class="flex justify-center gap-1">
-                                    <button @click="openEditForm( material )" class="ns-button rounded px-2 py-1 text-xs">
+                                    <button @click="openSupplyForm( material )" class="ns-button success rounded px-2 py-1 text-xs" :title="__( 'Approvisionner' )">
+                                        <i class="las la-dolly text-sm"></i>
+                                    </button>
+                                    <button @click="openEditForm( material )" class="ns-button rounded px-2 py-1 text-xs" :title="__( 'Modifier' )">
                                         <i class="las la-edit"></i>
                                     </button>
-                                    <button @click="deleteMaterial( material )" class="ns-button error rounded px-2 py-1 text-xs">
+                                    <button @click="deleteMaterial( material )" class="ns-button error rounded px-2 py-1 text-xs" :title="__( 'Supprimer' )">
                                         <i class="las la-trash"></i>
                                     </button>
                                 </div>
@@ -120,6 +123,58 @@
                 </div>
             </div>
         </div>
+        <!-- Supply Modal -->
+        <div v-if="showSupplyForm" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.5);">
+            <div class="ns-box shadow-lg rounded w-full max-w-md mx-4">
+                <div class="ns-box-header flex justify-between items-center p-4 border-b">
+                    <div>
+                        <h3 class="font-semibold text-lg">{{ __( 'Approvisionner' ) }}</h3>
+                        <p class="text-sm opacity-60">{{ supplyingMaterial?.name }}</p>
+                    </div>
+                    <button @click="closeSupplyForm()" class="ns-button rounded px-2 py-1">
+                        <i class="las la-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="ns-box-body p-4 flex flex-col gap-3">
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-1">{{ __( 'Quantité reçue' ) }} *</label>
+                            <input v-model.number="supplyForm.quantity" type="number" min="0.001" step="0.001" class="ns-input w-full rounded border px-3 py-2 text-sm" autofocus>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-1">
+                                {{ __( 'Coût unitaire' ) }}
+                                <span class="opacity-50 font-normal">({{ supplyingMaterial?.unit }})</span>
+                            </label>
+                            <input v-model.number="supplyForm.cost_per_unit" type="number" min="0" step="0.01" class="ns-input w-full rounded border px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">{{ __( 'Fournisseur' ) }}</label>
+                        <input v-model="supplyForm.supplier" type="text" class="ns-input w-full rounded border px-3 py-2 text-sm" :placeholder="__( 'ex: Dupont & Fils' )">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">{{ __( 'Note' ) }}</label>
+                        <input v-model="supplyForm.note" type="text" class="ns-input w-full rounded border px-3 py-2 text-sm" :placeholder="__( 'ex: Livraison BL-2026-001' )">
+                    </div>
+                    <div class="ns-box rounded p-3 text-sm opacity-70">
+                        {{ __( 'Stock actuel : {qty} {unit}' )
+                            .replace( '{qty}', supplyingMaterial?.stock_quantity ?? 0 )
+                            .replace( '{unit}', supplyingMaterial?.unit ?? '' ) }}
+                        → {{ __( 'Après : {qty} {unit}' )
+                            .replace( '{qty}', ((supplyingMaterial?.stock_quantity ?? 0) + (supplyForm.quantity || 0)).toFixed(3).replace(/\.?0+$/, '') )
+                            .replace( '{unit}', supplyingMaterial?.unit ?? '' ) }}
+                    </div>
+                </div>
+                <div class="ns-box-footer flex justify-end gap-2 p-4 border-t">
+                    <button @click="closeSupplyForm()" class="ns-button rounded px-4 py-2">{{ __( 'Annuler' ) }}</button>
+                    <button @click="submitSupply()" :disabled="isSupplying" class="ns-button info rounded px-4 py-2">
+                        <ns-spinner v-if="isSupplying" size="4"></ns-spinner>
+                        <span v-else><i class="las la-check mr-1"></i>{{ __( 'Confirmer' ) }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 <script>
@@ -139,6 +194,10 @@ export default {
             showForm: false,
             editingMaterial: null,
             form: this.emptyForm(),
+            showSupplyForm: false,
+            supplyingMaterial: null,
+            isSupplying: false,
+            supplyForm: this.emptySupplyForm(),
         };
     },
     mounted() {
@@ -149,6 +208,9 @@ export default {
         nsCurrency,
         emptyForm() {
             return { name: '', unit: 'kg', stock_quantity: 0, alert_quantity: 0, cost_per_unit: 0, description: '' };
+        },
+        emptySupplyForm() {
+            return { quantity: 1, cost_per_unit: 0, supplier: '', note: '' };
         },
         isLowStock( material ) {
             return material.alert_quantity > 0 && material.stock_quantity <= material.alert_quantity;
@@ -199,6 +261,37 @@ export default {
                 error: ( error ) => {
                     nsSnackBar.error( error.message || __( 'Une erreur est survenue.' ) );
                     this.isSaving = false;
+                },
+            });
+        },
+        openSupplyForm( material ) {
+            this.supplyingMaterial = material;
+            this.supplyForm = { ...this.emptySupplyForm(), cost_per_unit: material.cost_per_unit ?? 0 };
+            this.showSupplyForm = true;
+        },
+        closeSupplyForm() {
+            this.showSupplyForm = false;
+            this.supplyingMaterial = null;
+        },
+        submitSupply() {
+            if ( ! this.supplyForm.quantity || this.supplyForm.quantity <= 0 ) {
+                nsSnackBar.error( __( 'La quantité doit être supérieure à 0.' ) );
+                return;
+            }
+            this.isSupplying = true;
+            nsHttpClient.post(
+                `/api/ns-raw-material/raw-materials/${this.supplyingMaterial.id}/add-stock`,
+                this.supplyForm
+            ).subscribe({
+                next: () => {
+                    nsSnackBar.success( __( 'Approvisionnement enregistré.' ) );
+                    this.isSupplying = false;
+                    this.closeSupplyForm();
+                    this.loadRawMaterials();
+                },
+                error: ( error ) => {
+                    nsSnackBar.error( error.message || __( 'Une erreur est survenue.' ) );
+                    this.isSupplying = false;
                 },
             });
         },
